@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 外贸B端全链路AI自动化获客转化Agent系统  
 ## 技术对接需求文档（完整版）
 
@@ -135,3 +136,232 @@
 
 ### 输出字段固定模板
 
+=======
+# Trade AI Agent - 外贸B端全链路AI自动化获客转化Agent系统
+
+一个基于AI Agent + 可插拔Skill插件 + 可视化工作流引擎的外贸B端自动化获客系统，实现从社媒获客→数据整理→自动触达→智能询盘回复→客户跟进→老板监控的全流程无人自动化。
+
+## 功能特性
+
+### 核心功能
+
+- **社媒智能挖掘** - 从TikTok、Instagram等平台获取B端客户信息
+- **数据清洗与结构化** - 自动去重、格式统一、智能打标签
+- **话术生成** - AI生成个性化邮件和WhatsApp话术
+- **自动化触达** - 支持邮件和WhatsApp多渠道自动发送
+- **智能询盘回复** - AI自动识别意图并生成回复
+- **RAG 知识库增强** - 基于本地知识库回答客户专业问题
+- **老板监控与接管** - 实时监控、一键接管对话
+- **数据统计与报表** - 全流程数据可视化
+
+### 技术亮点
+
+- **可插拔Skill架构** - 轻松扩展新的处理能力
+- **可视化工作流引擎** - 拖拽式编排业务流程
+- **多AI模型支持** - 通义千问、文心一言、OpenAI
+- **异步任务队列** - Celery + Redis 实现高性能任务处理
+- **实时通信** - WebSocket 支持实时数据推送
+
+## 技术栈
+
+### 后端
+- Python 3.11+
+- FastAPI - Web框架
+- SQLAlchemy - ORM
+- PostgreSQL - 数据库
+- Redis - 缓存和消息队列
+- Celery - 异步任务处理
+- LangGraph - 工作流引擎
+- 通义千问/文心一言 - AI模型
+
+### 前端
+- Vue 3 - 前端框架
+- TypeScript - 类型安全
+- Vite - 构建工具
+- Element Plus - UI组件库
+- Pinia - 状态管理
+- ECharts - 数据可视化
+
+### 部署
+- Docker & Docker Compose
+- Nginx - 反向代理
+
+## 项目结构
+
+```
+trade-ai-agent/
+├── backend/                          # 后端服务
+│   ├── app/
+│   │   ├── api/                      # API路由
+│   │   ├── core/                     # 核心模块
+│   │   ├── skills/                   # Skill插件目录
+│   │   ├── models/                   # 数据模型
+│   │   ├── integrations/             # 第三方集成
+│   │   ├── services/                 # 业务服务
+│   │   ├── tasks/                    # 异步任务
+│   │   └── templates/                # 模板
+│   ├── tests/                        # 测试
+│   └── requirements.txt
+├── frontend/                         # 前端管理面板
+│   ├── src/
+│   │   ├── api/                     # API调用
+│   │   ├── components/              # 组件
+│   │   ├── views/                   # 页面
+│   │   ├── stores/                  # Pinia状态管理
+│   │   └── types/                   # TypeScript类型
+├── docker-compose.yml
+├── Dockerfile
+└── README.md
+```
+
+## 快速开始
+
+### 前置要求
+
+- Docker & Docker Compose
+- Python 3.11+ (本地开发)
+- Node.js 20+ (本地开发)
+
+### 1. 克隆项目
+
+```bash
+git clone https://github.com/your-repo/trade-ai-agent.git
+cd trade-ai-agent
+```
+
+### 2. 配置环境变量
+
+```bash
+cp .env.example .env
+# 编辑 .env 文件，填入你的配置
+```
+
+### 3. 使用Docker启动
+
+```bash
+docker-compose up -d
+```
+
+服务启动后：
+- 前端: http://localhost:3000
+- 后端API: http://localhost:8000
+- API文档: http://localhost:8000/docs
+- Flower (Celery监控): http://localhost:5555
+
+### 4. 创建管理员账号
+
+```bash
+docker-compose exec backend python -c "
+from app.db import SessionLocal
+from app.api.v1.auth import get_password_hash
+from app.models.database import User
+
+db = SessionLocal()
+admin = User(
+    username='admin',
+    email='admin@example.com',
+    hashed_password=get_password_hash('admin123'),
+    is_superuser=True
+)
+db.add(admin)
+db.commit()
+print('Admin user created: username=admin, password=admin123')
+"
+```
+
+## 本地开发
+
+### 后端开发
+
+```bash
+cd backend
+
+# 创建虚拟环境
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# 安装依赖
+pip install -r requirements.txt
+
+# 配置环境变量
+export DATABASE_URL=postgresql://admin:password@localhost:5432/trade_ai
+export REDIS_URL=redis://localhost:6379/0
+
+# 运行迁移
+python -c "from app.db import init_db; init_db()"
+
+# 启动开发服务器
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# 启动Celery worker (另一个终端)
+celery -A app.tasks.celery_worker worker --loglevel=info
+
+# 启动Celery beat (另一个终端)
+celery -A app.tasks.celery_worker beat --loglevel=info
+```
+
+### 前端开发
+
+```bash
+cd frontend
+
+# 安装依赖
+npm install
+
+# 启动开发服务器
+npm run dev
+
+# 构建生产版本
+npm run build
+```
+
+## 使用说明
+
+### 1. 配置AI模型
+
+在设置页面或`.env`文件中配置你的AI API密钥：
+- 通义千问: `TONGYI_API_KEY`
+- 文心一言: `QWEN_API_KEY`
+- OpenAI: `OPENAI_API_KEY`
+
+### 2. 添加发送账号
+
+在设置 > 账号 中添加你的邮件或WhatsApp账号凭证。
+
+### 3. 创建工作流
+
+1. 进入工作流页面
+2. 点击"创建工作流"
+3. 从左侧Skill库拖拽节点到画布
+4. 配置节点参数
+5. 保存工作流
+
+### 4. 执行获客流程
+
+(详细流程说明...)
+
+### 5. RAG 知识库管理
+
+系统内置了 RAG (检索增强生成) 功能，允许你上传公司文档、产品手册或销售话术，AI 在回复客户时会自动参考这些内容。
+
+#### 命令行管理工具
+
+可以使用提供的脚本管理知识库：
+
+```bash
+# 激活虚拟环境
+cd backend
+source venv/bin/activate
+
+# 添加文档到知识库
+python scripts/manage_knowledge.py add --text "我们的产品价格是根据数量阶梯定价的，100个以上享受9折优惠。" --source "pricing_policy"
+
+# 验证查询
+python scripts/manage_knowledge.py query --text "批量购买有优惠吗？"
+
+# 清空知识库
+python scripts/manage_knowledge.py clear
+```
+
+添加文档后，`AIReplySkill` 在生成回复时会自动检索相关信息。
+>>>>>>> 11cd409 (first init repo)

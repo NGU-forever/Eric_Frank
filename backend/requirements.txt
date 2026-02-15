@@ -1,0 +1,65 @@
+# Core
+fastapi>=0.110.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.9.0
+pydantic-settings>=2.4.0
+email-validator>=2.0.0
+
+# Database
+sqlalchemy>=2.0.30
+pg8000>=1.31.0
+alembic>=1.13.0
+
+# Redis & Cache
+# redis==5.0.1
+# hiredis==2.2.3
+
+# Task Queue
+# celery==5.3.6
+# flower==2.0.1
+
+# AI & LangChain
+langgraph
+langchain
+langchain-openai
+langchain-community
+chromadb
+tiktoken
+dashscope
+openai
+
+# Data Processing
+pandas
+openpyxl
+
+# Email & Communication
+aiohttp==3.9.1
+aiosmtplib
+
+# Authentication
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+
+# WebSocket
+websockets==12.0
+
+# Utilities
+httpx==0.26.0
+pytz==2024.1
+python-dateutil==2.8.2
+tenacity==8.2.3
+
+# Third-party APIs
+google-api-python-client==2.108.0
+google-auth-oauthlib==1.1.0
+google-auth-httplib2==0.2.0
+
+# Testing
+pytest==7.4.4
+pytest-asyncio==0.23.3
+httpx==0.26.0
+
+# Logging & Monitoring
+loguru==0.7.2
+prometheus-client==0.19.0

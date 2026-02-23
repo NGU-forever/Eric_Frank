@@ -59,6 +59,7 @@ dist/
 # Frontend
 .env.local
 .env.*.local
+frontend/package-lock.json
 
 # OS
 Thumbs.db

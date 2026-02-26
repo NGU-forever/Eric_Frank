@@ -1,34 +1,33 @@
-FROM python:3.11-slim
+# syntax=docker/dockerfile:1
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+# ============================================================
+# Stage 1 — Base Image
+# ============================================================
+FROM python:3.11-slim AS base
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    g++ \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+# Prevent Python from writing .pyc files and buffer stdout/stderr
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
-# Set work directory
 WORKDIR /app
 
-# Install Python dependencies
+# ============================================================
+# Stage 2 — Install dependencies (cacheable layer)
+# ============================================================
 COPY requirements.txt .
-RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# ============================================================
+# Stage 3 — Copy application code
+# ============================================================
 COPY . .
 
-# Create necessary directories
-RUN mkdir -p uploads exports logs checkpoints
-
-# Expose port
+# Expose FastAPI port
 EXPOSE 8000
 
-# Run application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# ============================================================
+# Start FastAPI via uvicorn
+# host=0.0.0.0 is REQUIRED for Docker container external access
+# ============================================================
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

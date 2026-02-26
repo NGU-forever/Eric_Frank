@@ -1,177 +1,66 @@
-version: '3.8'
+# ============================================================
+# docker-compose.yml
+# B2B AI Outreach System
+# Start with: docker-compose up --build
+# ============================================================
+
+# version: "3.9"
 
 services:
-  # PostgreSQL Database
+
+  # ----------------------------------------------------------
+  # db: PostgreSQL 15 database
+  # ----------------------------------------------------------
   db:
-    image: postgres:15-alpine
-    container_name: trade_ai_db
+    image: postgres:15
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: trade_ai
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: ${POSTGRES_USER:-b2b_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-b2b_password}
+      POSTGRES_DB: ${POSTGRES_DB:-b2b_db}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5432:5432" # Expose for local debugging; remove in production
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d trade_ai"]
-      interval: 10s
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-b2b_user} -d ${POSTGRES_DB:-b2b_db}" ]
+      interval: 5s
       timeout: 5s
-      retries: 5
-    networks:
-      - trade_ai_network
+      retries: 10
 
-  # Redis
-  redis:
-    image: redis:7-alpine
-    container_name: trade_ai_redis
-    command: redis-server --appendonly yes
-    volumes:
-      - redis_data:/data
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-    networks:
-      - trade_ai_network
-
-  # Backend API
-  backend:
+  # ----------------------------------------------------------
+  # web: FastAPI + LangGraph backend
+  # ----------------------------------------------------------
+  web:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: trade_ai_backend
-    environment:
-      - DATABASE_URL=postgresql://admin:password@db:5432/trade_ai
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/2
-      - CELERY_RESULT_BACKEND=redis://redis:6379/3
-      - SECRET_KEY=your-secret-key-change-in-production
-      - DEBUG=False
+    restart: unless-stopped
     ports:
       - "8000:8000"
-    volumes:
-      - ./backend:/app
-      - uploads:/app/uploads
-      - exports:/app/exports
+    env_file:
+      - .env # Load all keys from .env (copy from .env.example)
+    environment:
+      # Override DATABASE_URL to point at the 'db' service (Docker service name)
+      DATABASE_URL: postgresql://${POSTGRES_USER:-b2b_user}:${POSTGRES_PASSWORD:-b2b_password}@db:5432/${POSTGRES_DB:-b2b_db}
     depends_on:
       db:
         condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - trade_ai_network
-
-  # Celery Worker
-  celery_worker:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: trade_ai_celery_worker
-    command: celery -A app.tasks.celery_worker worker --loglevel=info --concurrency=4
-    environment:
-      - DATABASE_URL=postgresql://admin:password@db:5432/trade_ai
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/2
-      - CELERY_RESULT_BACKEND=redis://redis:6379/3
-      - SECRET_KEY=your-secret-key-change-in-production
-      - DEBUG=False
     volumes:
-      - ./backend:/app
-      - uploads:/app/uploads
-      - exports:/app/exports
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      backend:
-        condition: service_started
-    networks:
-      - trade_ai_network
+      - ./backend:/app # Hot-reload for development (remove in production)
 
-  # Celery Beat (Scheduler)
-  celery_beat:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: trade_ai_celery_beat
-    command: celery -A app.tasks.celery_worker beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
-    environment:
-      - DATABASE_URL=postgresql://admin:password@db:5432/trade_ai
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/2
-      - CELERY_RESULT_BACKEND=redis://redis:6379/3
-      - SECRET_KEY=your-secret-key-change-in-production
-      - DEBUG=False
-    volumes:
-      - ./backend:/app
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - trade_ai_network
-
-  # Celery Flower (Monitoring)
-  flower:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: trade_ai_flower
-    command: celery -A app.tasks.celery_worker flower --port=5555
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/2
-      - CELERY_RESULT_BACKEND=redis://redis:6379/3
-    ports:
-      - "5555:5555"
-    depends_on:
-      redis:
-        condition: service_healthy
-    networks:
-      - trade_ai_network
-
-  # Frontend
+  # ----------------------------------------------------------
+  # frontend: React (Vite) dashboard
+  # ----------------------------------------------------------
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: trade_ai_frontend
-    ports:
-      - "3000:80"
-    depends_on:
-      - backend
-    networks:
-      - trade_ai_network
-
-  # Nginx (Reverse Proxy - Optional)
-  nginx:
-    image: nginx:alpine
-    container_name: trade_ai_nginx
+    restart: unless-stopped
     ports:
       - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
     depends_on:
-      - backend
-      - frontend
-    networks:
-      - trade_ai_network
-    profiles:
-      - production
+      - web
 
 volumes:
   postgres_data:
-  redis_data:
-  uploads:
-  exports:
-
-networks:
-  trade_ai_network:
-    driver: bridge

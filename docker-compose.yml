@@ -47,7 +47,7 @@ services:
       db:
         condition: service_healthy
     volumes:
-      - ./backend:/app # Hot-reload for development (remove in production)
+      - ./backend:/app/backend # Hot-reload for development
 
   # ----------------------------------------------------------
   # frontend: React (Vite) dashboard

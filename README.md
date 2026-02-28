@@ -33,7 +33,7 @@ docker-compose up -d
 ```
 
 服务启动后：
-- 前端管理面板: http://localhost:3000
+- 前端管理面板: http://localhost:80
 - 后端API: http://localhost:8000
 - API文档: http://localhost:8000/docs
 

@@ -33,7 +33,8 @@ docker-compose up -d
 ```
 
 服务启动后：
-- 前端管理面板: http://localhost:80
+- 前端管理面板 (React): http://localhost:80
+- Vben Admin 管理面板 (Vue3): http://localhost:8010
 - 后端API: http://localhost:8000
 - API文档: http://localhost:8000/docs
 
@@ -173,7 +174,25 @@ print('Admin user created: username=admin, password=admin123')
 
 - 检查Docker容器状态: `docker-compose ps`
 - 查看日志: `docker-compose logs -f`
-- 验证API连接: 访问http://localhost:8000/docs
-- 检查Celery任务: 访问http://localhost:5555
+- 验证API连接: 访问 http://localhost:8000/docs
+- 检查Celery任务: 访问 http://localhost:5555
+- **Vben Admin 资源问题**: 如果 Docker 编译时卡死，请确保 Docker 分配了至少 4GB 内存。系统已针对低资源环境进行了优化（限制了编译并发数和 Node 内存）。
+
+## Vben Admin 管理系统
+
+为了提供更强大的后台管理能力，本项目集成了 [Vue Vben Admin](https://github.com/vbenjs/vue-vben-admin)。
+
+### 功能特点
+- **内置组件**: 丰富的后台管理组件（图表、表单、表格）。
+- **权限管理**: 完善的角色和菜单权限控制。
+- **现代化架构**: 基于 Vue3, Vite, Ant Design Vue, TypeScript。
+
+### 部署与运行
+1. **统一启动**: 在根目录下运行 `docker-compose up -d --build`。
+2. **访问地址**: `http://localhost:8010`
+3. **性能优化**: 针对 Docker 部署，我们优化了 `Dockerfile`：
+   - 限制 Node 编译内存为 4GB。
+   - 仅编译 `playground` 应用以节省资源。
+   - 开启单进程编译模式 (`--concurrency=1`) 防止 CPU 飙升。
 
 通过以上步骤，您可以成功启动并运行Trade AI Agent系统，实现外贸B端的自动化获客转化。

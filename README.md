@@ -76,13 +76,13 @@ print('Admin user created: username=admin, password=admin123')
 **作用**: 负责第一阶段"由面到点精准搜索"
 
 **功能**:
-- 调用Google Search API进行全网批量泛搜
+- 使用 ddgs（DuckDuckGo metasearch）进行全网批量泛搜，**无需 API Key**
 - 智能清洗：自动排除B2B平台、广告、黄页等噪音
 - 输出高质量目标企业官网列表
 - 支持竞对域名对比搜索
 
 **技术实现**:
-- 使用Serper API进行Google搜索
+- 使用 ddgs 进行搜索（免费、零配置）
 - 智能域名过滤算法
 - 数据库持久化，状态标记为"Scouted"
 

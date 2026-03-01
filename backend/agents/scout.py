@@ -2,17 +2,16 @@
 backend/agents/scout.py
 -----------------------
 Agent 1: Market Scout
-Searches Google (via Serper API) for B2B distributors,
+Searches the web (via ddgs, free) for B2B distributors,
 filters out marketplace noise, and writes clean leads to the DB.
 """
 from __future__ import annotations
 
 import logging
-import os
 from typing import Any
 
-import httpx
-from pydantic import BaseModel, HttpUrl, field_validator
+from ddgs import DDGS
+from pydantic import BaseModel, field_validator
 
 from backend.db.crud import SupabaseCRUD
 
@@ -82,24 +81,23 @@ def _build_search_query(keyword: str, competitor_domain: str | None) -> str:
     return base
 
 
-def _call_serper(query: str, num_results: int = 10) -> list[dict[str, Any]]:
-    api_key = os.environ.get("SERPER_API_KEY", "")
-    if not api_key:
-        logger.warning("[Scout] SERPER_API_KEY not set — returning mock results.")
+def _call_ddgs(query: str, num_results: int = 10) -> list[dict[str, Any]]:
+    """Use ddgs (free DuckDuckGo metasearch) — no API key required."""
+    try:
+        raw = DDGS().text(query, max_results=num_results, backend="duckduckgo")
+    except Exception as exc:
+        logger.warning(f"[Scout] ddgs search failed: {exc} — returning mock results.")
         return [
             {"title": "Demo Distributor Co.", "link": "https://demo-distributor.com"},
             {"title": "Global Parts Inc.", "link": "https://globalpartsinc.com"},
         ]
 
-    response = httpx.post(
-        "https://google.serper.dev/search",
-        headers={"X-API-KEY": api_key, "Content-Type": "application/json"},
-        json={"q": query, "num": num_results},
-        timeout=15,
-    )
-    response.raise_for_status()
-    data = response.json()
-    return data.get("organic", [])
+    # ddgs returns {"title", "href", "body"}; normalise to {"title", "link"} for downstream
+    return [
+        {"title": r.get("title", ""), "link": r.get("href", "")}
+        for r in raw
+        if r.get("href")
+    ]
 
 
 def run_scout(input_data: ScoutInput) -> ScoutOutput:
@@ -110,7 +108,7 @@ def run_scout(input_data: ScoutInput) -> ScoutOutput:
     logger.info(f"[Scout] Searching for: {input_data.product_keyword}")
 
     query = _build_search_query(input_data.product_keyword, input_data.competitor_domain)
-    raw_results = _call_serper(query, input_data.max_results)
+    raw_results = _call_ddgs(query, input_data.max_results)
 
     leads: list[LeadItem] = []
     skipped = 0

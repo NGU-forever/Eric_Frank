@@ -1,0 +1,33 @@
+---
+description: 本项目使用 uv 作为包管理器
+alwaysApply: true
+---
+
+# UV 包管理
+
+本项目使用 [uv](https://docs.astral.sh/uv/) 进行 Python 包管理。
+
+## 常用命令
+
+| 命令 | 说明 |
+|------|------|
+| `uv sync` | 安装/同步依赖（根据 pyproject.toml 和 uv.lock） |
+| `uv add <package>` | 添加依赖到 pyproject.toml |
+| `uv add --dev <package>` | 添加开发依赖 |
+| `uv remove <package>` | 移除依赖 |
+| `uv run python -m backend.demo` | 在 uv 管理的环境中运行 |
+| `uv run uvicorn backend.main:app` | 启动 FastAPI |
+
+## 约定
+
+- **依赖定义**：所有生产依赖写在 `pyproject.toml` 的 `[project].dependencies`
+- **锁文件**：`uv.lock` 应提交到 git，保证团队环境一致
+- **新增依赖**：使用 `uv add` 而非手动编辑 pyproject.toml
+- **虚拟环境**：uv 自动管理 `.venv`，无需 `python -m venv`
+
+## 首次 / 新成员克隆后
+
+```bash
+uv sync
+uv run python -m backend.demo   # 测试运行
+```
